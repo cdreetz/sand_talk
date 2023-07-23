@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var audioURL: URL?
     @State private var transcribedText: String = ""
     
+    @State private var audioRecorder: AVAudioRecorder?
+    
     @State private var isTranscriptionPermissionGranted = false
 
     var body: some View {
@@ -44,6 +46,19 @@ struct ContentView: View {
                     .cornerRadius(10)
             }
             .disabled(!isTranscriptionPermissionGranted)
+            
+            Button(action: {
+                startTranscription()
+            }) {
+                Text("Start Transcription")
+                    .font(.headline)
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .disabled(!isTranscriptionPermissionGranted)
+
 
             Text(responseText)
                 .padding()
@@ -77,6 +92,8 @@ struct ContentView: View {
                     // Parse the JSON data
                     if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                        let responseText = json["output"] as? String {
+                        // Speak the response
+                        self.speak(responseText)
                         completion(.success(responseText))
                     }
                 } catch {
@@ -119,9 +136,45 @@ struct ContentView: View {
     }
     func speak(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US") // use the default voice for English
         let synthesizer = AVSpeechSynthesizer()
         synthesizer.speak(utterance)
     }
+
+    func startRecording() {
+        let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
+
+        let settings = [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 12000,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+
+        do {
+            audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
+            audioRecorder?.record()
+
+            // Set the audioURL to the URL of the new recording
+            self.audioURL = audioFilename
+        } catch {
+            print("Could not start recording")
+        }
+    }
+
+    func stopRecording() {
+        audioRecorder?.stop()
+        audioRecorder = nil
+        
+        // Start the transcription
+        startTranscription()
+    }
+
+    func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
+    }
+
 
 }
 
