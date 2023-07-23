@@ -25,7 +25,7 @@ struct ContentView: View {
         VStack {
             TextField("Enter text", text: $inputText)
                 .padding()
-
+                
             Button(action: {
                 sendText(inputText) { result in
                     DispatchQueue.main.async {
@@ -69,7 +69,7 @@ struct ContentView: View {
     }
     func sendText(_ text: String, completion: @escaping (Result<String, Error>) -> Void) {
         // Convert the endpoint URL string to a URL object
-        guard let url = URL(string: "http://127.0.0.1:8000/get_gpt_response") else {
+        guard let url = URL(string: "http://192.168.1.222:8000/get_gpt_response") else {
             print("Invalid URL")
             return
         }
@@ -184,7 +184,7 @@ struct ContentView: View {
 
     func sendAudioData(_ audioData: Data, completion: @escaping (Result<Data, Error>) -> Void) {
         // Convert the endpoint URL string to a URL object
-        guard let url = URL(string: "http://127.0.0.1:8000") else {
+        guard let url = URL(string: "http://192.168.1.222:8000") else {
             print("Invalid URL")
             return
         }
