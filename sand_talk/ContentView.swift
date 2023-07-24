@@ -20,11 +20,14 @@ struct ContentView: View {
     @State private var audioRecorder: AVAudioRecorder?
     
     @State private var isTranscriptionPermissionGranted = false
+    
+    @State private var synthesizer = AVSpeechSynthesizer()
 
     var body: some View {
         VStack {
             TextField("Enter text", text: $inputText)
                 .padding()
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black, lineWidth: 1))
                 
             Button(action: {
                 sendText(inputText) { result in
@@ -60,8 +63,22 @@ struct ContentView: View {
             .disabled(!isTranscriptionPermissionGranted)
 
 
-            Text(responseText)
-                .padding()
+            ScrollView {
+                Text(responseText)
+                    .padding()
+            }
+            
+            Button(action: {
+                self.synthesizer.stopSpeaking(at: .immediate)
+            }) {
+                Text("Pause Transcription")
+                    .font(.headline)
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+                    
         }
         .onAppear(perform: {
             self.requestTranscriptionPermission()
@@ -136,9 +153,8 @@ struct ContentView: View {
     }
     func speak(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US") // use the default voice for English
-        let synthesizer = AVSpeechSynthesizer()
-        synthesizer.speak(utterance)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        self.synthesizer.speak(utterance)
     }
 
     func startRecording() {
